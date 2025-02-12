@@ -1,4 +1,3 @@
-// controllers/uploadsFetchController.js
 const path = require('path');
 
 /**
@@ -7,7 +6,6 @@ const path = require('path');
  *   name: Uploads
  *   description: Recupera arquivos enviados
  */
-
 exports.basePath = '/uploads';
 
 /**
@@ -19,10 +17,10 @@ exports.basePath = '/uploads';
  *     parameters:
  *       - in: path
  *         name: fileId
- *         schema:
- *           type: string
  *         required: true
  *         description: Nome do arquivo
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Arquivo retornado com sucesso
@@ -32,3 +30,8 @@ exports.getFile = (req, res) => {
   const filePath = path.join(__dirname, '..', 'uploads', fileId);
   res.sendFile(filePath);
 };
+
+exports.customRoutes = [
+  { method: 'get', route: '/:fileId', handler: exports.getFile }
+  
+];

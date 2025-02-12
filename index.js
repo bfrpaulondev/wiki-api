@@ -13,23 +13,37 @@ app.use(express.json());
 // Conexão com o banco de dados
 require('./config/database');
 
-// Configuração do Swagger
 const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Wiki API',
-      version: '1.0.0',
-      description: 'API para gerenciamento de Wiki com seções, artigos, histórico, comentários, uploads, autenticação, etc.',
-    },
-    servers: [
-      {
-        url: 'http://localhost:' + (process.env.PORT || 3000) + '/api',
+    definition: {
+      openapi: '3.0.0',
+      info: {
+        title: 'Wiki API',
+        version: '1.0.0',
+        description: 'API para gerenciamento de Wiki',
       },
-    ],
-  },
-  apis: [path.join(__dirname, '/controllers/*.js')],
-};
+      servers: [
+        {
+          url: 'http://localhost:' + (process.env.PORT || 3000) + '/api',
+        },
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+        },
+      },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+    },
+    apis: [path.join(__dirname, '/controllers/*.js'), path.join(__dirname, '/models/*.js')],
+  };
+  
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

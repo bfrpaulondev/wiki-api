@@ -5,7 +5,142 @@ const bcrypt = require('bcrypt');
 
 exports.basePath = '/auth';
 
-// Não usamos CRUD automático para auth; registramos endpoints customizados
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Registra um novo usuário
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: "meuUser"
+ *               email:
+ *                 type: string
+ *                 example: "meuemail@exemplo.com"
+ *               password:
+ *                 type: string
+ *                 example: "minhaSenha"
+ *     responses:
+ *       201:
+ *         description: Usuário registrado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       500:
+ *         description: Erro interno no servidor
+ */
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Autentica um usuário e gera um token JWT
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "meuemail@exemplo.com"
+ *               password:
+ *                 type: string
+ *                 example: "minhaSenha"
+ *     responses:
+ *       200:
+ *         description: Token JWT gerado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *       401:
+ *         description: Falha na autenticação (usuário não encontrado ou senha incorreta)
+ *       500:
+ *         description: Erro interno no servidor
+ */
+
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: Obtém os detalhes do usuário logado
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Detalhes do usuário
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       500:
+ *         description: Erro interno no servidor
+ */
+
+/**
+ * @swagger
+ * /auth/update-password:
+ *   put:
+ *     summary: Atualiza a senha do usuário logado
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 example: "senhaAntiga"
+ *               newPassword:
+ *                 type: string
+ *                 example: "novaSenha"
+ *     responses:
+ *       200:
+ *         description: Senha atualizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Senha atual incorreta
+ *       404:
+ *         description: Usuário não encontrado
+ *       500:
+ *         description: Erro interno no servidor
+ */
+
 exports.customRoutes = [
   {
     method: 'post',
@@ -32,7 +167,11 @@ exports.customRoutes = [
         if (!user) return res.status(401).json({ message: 'Usuário não encontrado' });
         const valid = await bcrypt.compare(password, user.password);
         if (!valid) return res.status(401).json({ message: 'Senha incorreta' });
-        const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET || 'secretkey', { expiresIn: '1h' });
+        const token = jwt.sign(
+          { id: user._id, username: user.username },
+          process.env.JWT_SECRET || 'secretkey',
+          { expiresIn: '1h' }
+        );
         res.json({ token });
       } catch (err) {
         res.status(500).json({ error: err.message });

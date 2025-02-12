@@ -2,13 +2,13 @@
 const Article = require('../models/Article');
 const ArticleHistory = require('../models/ArticleHistory');
 
-/**
- * @swagger
- * tags:
- *   name: Articles
- *   description: Gerencia os artigos da Wiki
- */
-
+ /**
+  * @swagger
+  * tags:
+  *   name: Articles
+  *   description: Gerencia os artigos da Wiki
+  */
+ 
 exports.basePath = '/articles';
 exports.authCrud = true; // Criação, atualização e deleção requerem autenticação
 
@@ -21,6 +21,12 @@ exports.authCrud = true; // Criação, atualização e deleção requerem autent
  *     responses:
  *       200:
  *         description: Retorna uma lista de artigos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Article'
  */
 exports.listAll = async (req, res) => {
   try {
@@ -53,6 +59,10 @@ exports.listAll = async (req, res) => {
  *     responses:
  *       201:
  *         description: Artigo criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Article'
  */
 exports.create = async (req, res) => {
   try {
@@ -78,13 +88,19 @@ exports.create = async (req, res) => {
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
  *         required: true
  *         description: ID do artigo
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Detalhes do artigo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Article'
+ *       404:
+ *         description: Artigo não encontrado
  */
 exports.getById = async (req, res) => {
   try {
@@ -105,10 +121,10 @@ exports.getById = async (req, res) => {
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
  *         required: true
  *         description: ID do artigo a ser atualizado
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -123,6 +139,12 @@ exports.getById = async (req, res) => {
  *     responses:
  *       200:
  *         description: Artigo atualizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Article'
+ *       404:
+ *         description: Artigo não encontrado
  */
 exports.update = async (req, res) => {
   try {
@@ -163,13 +185,15 @@ exports.update = async (req, res) => {
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
  *         required: true
  *         description: ID do artigo a ser removido
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Artigo removido com sucesso
+ *       404:
+ *         description: Artigo não encontrado
  */
 exports.delete = async (req, res) => {
   try {
@@ -182,8 +206,33 @@ exports.delete = async (req, res) => {
 };
 
 /**
- * Endpoint customizado para restaurar uma versão antiga do artigo
- * POST /articles/{id}/restore/{historyId}
+ * @swagger
+ * /articles/{id}/restore/{historyId}:
+ *   post:
+ *     summary: Restaura uma versão antiga de um artigo
+ *     tags: [Articles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do artigo
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: historyId
+ *         required: true
+ *         description: ID do histórico a ser restaurado
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Artigo restaurado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Article'
+ *       404:
+ *         description: Histórico ou artigo não encontrado
  */
 exports.restoreVersion = async (req, res) => {
   try {
@@ -206,12 +255,196 @@ exports.restoreVersion = async (req, res) => {
   }
 };
 
-// Registra a rota customizada para restauração
+/**
+ * @swagger
+ * /articles/{id}/draft:
+ *   post:
+ *     summary: Salva um artigo como rascunho
+ *     tags: [Articles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do artigo a ser salvo como rascunho
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Artigo salvo como rascunho
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Article'
+ *       404:
+ *         description: Artigo não encontrado
+ */
+exports.saveDraft = async (req, res) => {
+  try {
+    const updated = await Article.findByIdAndUpdate(
+      req.params.id,
+      { status: 'draft', updatedAt: new Date() },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'Artigo não encontrado' });
+    res.json({ message: 'Artigo salvo como rascunho', article: updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @swagger
+ * /articles/{id}/publish:
+ *   put:
+ *     summary: Publica um artigo (muda status para published)
+ *     tags: [Articles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do artigo a ser publicado
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Artigo publicado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Article'
+ *       404:
+ *         description: Artigo não encontrado
+ */
+exports.publishArticle = async (req, res) => {
+  try {
+    const updated = await Article.findByIdAndUpdate(
+      req.params.id,
+      { status: 'published', updatedAt: new Date() },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'Artigo não encontrado' });
+    res.json({ message: 'Artigo publicado', article: updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @swagger
+ * /articles/{id}/revisions:
+ *   get:
+ *     summary: Lista as revisões (histórico) de um artigo
+ *     tags: [Articles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do artigo para o qual se deseja ver o histórico
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lista de revisões do artigo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ArticleHistory'
+ *       404:
+ *         description: Artigo não encontrado
+ */
+exports.listRevisions = async (req, res) => {
+  try {
+    const revisions = await ArticleHistory.find({ articleId: req.params.id });
+    res.json(revisions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Article:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         title:
+ *           type: string
+ *         content:
+ *           type: string
+ *         section:
+ *           type: string
+ *         userId:
+ *           type: string
+ *         status:
+ *           type: string
+ *         tags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         attachments:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               url:
+ *                 type: string
+ *               filename:
+ *                 type: string
+ *               uploadedAt:
+ *                 type: string
+ *                 format: date-time
+ *         views:
+ *           type: number
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     ArticleHistory:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         articleId:
+ *           type: string
+ *         title:
+ *           type: string
+ *         content:
+ *           type: string
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ */
+ 
 exports.customRoutes = [
   {
     method: 'post',
     route: '/:id/restore/:historyId',
     auth: true,
     handler: exports.restoreVersion,
+  },
+  {
+    method: 'post',
+    route: '/:id/draft',
+    auth: true,
+    handler: exports.saveDraft,
+  },
+  {
+    method: 'put',
+    route: '/:id/publish',
+    auth: true,
+    handler: exports.publishArticle,
+  },
+  {
+    method: 'get',
+    route: '/:id/revisions',
+    auth: true,
+    handler: exports.listRevisions,
   },
 ];

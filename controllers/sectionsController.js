@@ -7,7 +7,6 @@ const Section = require('../models/Section');
  *   name: Sections
  *   description: Gerencia as seções da Wiki
  */
-
 exports.basePath = '/sections';
 exports.authCrud = true;
 
@@ -20,6 +19,14 @@ exports.authCrud = true;
  *     responses:
  *       200:
  *         description: Retorna uma lista de seções
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Section'
+ *       500:
+ *         description: Erro interno no servidor
  */
 exports.listAll = async (req, res) => {
   try {
@@ -42,12 +49,21 @@ exports.listAll = async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
  *             properties:
  *               name:
  *                 type: string
+ *                 example: "SQL"
  *     responses:
  *       201:
  *         description: Seção criada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Section'
+ *       500:
+ *         description: Erro interno no servidor
  */
 exports.create = async (req, res) => {
   try {
@@ -68,13 +84,21 @@ exports.create = async (req, res) => {
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
  *         required: true
  *         description: ID da seção
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Detalhes da seção
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Section'
+ *       404:
+ *         description: Seção não encontrada
+ *       500:
+ *         description: Erro interno no servidor
  */
 exports.getById = async (req, res) => {
   try {
@@ -95,10 +119,10 @@ exports.getById = async (req, res) => {
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
  *         required: true
  *         description: ID da seção a ser atualizada
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -108,9 +132,18 @@ exports.getById = async (req, res) => {
  *             properties:
  *               name:
  *                 type: string
+ *                 example: "Nova Seção"
  *     responses:
  *       200:
  *         description: Seção atualizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Section'
+ *       404:
+ *         description: Seção não encontrada
+ *       500:
+ *         description: Erro interno no servidor
  */
 exports.update = async (req, res) => {
   try {
@@ -135,13 +168,25 @@ exports.update = async (req, res) => {
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
  *         required: true
  *         description: ID da seção a ser removida
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Seção removida com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Seção removida"
+ *       404:
+ *         description: Seção não encontrada
+ *       500:
+ *         description: Erro interno no servidor
  */
 exports.delete = async (req, res) => {
   try {
@@ -152,3 +197,22 @@ exports.delete = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Section:
+ *       type: object
+ *       required:
+ *         - name
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: ID único da seção.
+ *           example: "63f9c2f8e3b0a34567890abc"
+ *         name:
+ *           type: string
+ *           description: Nome da seção.
+ *           example: "SQL"
+ */
