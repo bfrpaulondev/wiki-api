@@ -25,6 +25,8 @@ const swaggerOptions = {
         {
          // url: 'http://localhost:' + (process.env.PORT || 3000) + '/api',
           url: 'https://wiki-api-glte.onrender.com/' + '/api',
+          description: 'Servidor de desenvolvimento',
+          
         },
       ],
       components: {
