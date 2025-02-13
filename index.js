@@ -9,6 +9,11 @@ require('dotenv').config();
 // Inicializa o Express
 const app = express();
 app.use(express.json());
+const cors = require('cors');
+const allowedOrigin = process.env.ALLOWED_ORIGIN || '*'; // You can set ALLOWED_ORIGIN in your .env file
+app.use(cors({
+  origin: allowedOrigin
+}));
 
 // Conexão com o banco de dados
 require('./config/database');
