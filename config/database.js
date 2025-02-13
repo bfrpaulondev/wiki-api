@@ -1,7 +1,7 @@
 // config/database.js
 const mongoose = require('mongoose');
 
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/wiki-api';
+const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://Bfrpaulon:ySguNepQ71gYSW3C@cluster0.7coxk.mongodb.net/';
 
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
