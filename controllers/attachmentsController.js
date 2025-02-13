@@ -75,35 +75,16 @@ exports.authCrud = true;
  *         description: Erro interno no servidor
  */
 exports.addAttachment = [
-  // Middleware de upload com multer
   upload.single('file'),
   async (req, res) => {
     try {
-      // Verifica se o usuário está autenticado (gerenciado pelo middleware de autenticação)
-      if (!req.user) {
-        return res.status(403).json({ message: 'Permission denied' });
-      }
-      
-      // Verifica se foi enviado um arquivo
       if (!req.file) return res.status(400).json({ message: 'Nenhum arquivo enviado' });
-      
-      // Procura o artigo pelo ID
-      const article = await Article.findById(req.params.id);
-      if (!article) return res.status(404).json({ message: 'Artigo não encontrado' });
-      
-      // Opcional: Verifica se o usuário é o dono do artigo
-      if (article.userId && article.userId.toString() !== req.user.id) {
-        return res.status(403).json({ message: 'Permission error', error: 'exceptions.UserAuthError' });
-      }
-      
-      // Cria o objeto de anexo a partir dos dados do arquivo enviado
+      // Atualiza o artigo adicionando o anexo
       const attachment = {
-        url: req.file.path,       // A URL retornada pelo Cloudinary
+        url: req.file.path,
         filename: req.file.filename,
         uploadedAt: new Date()
       };
-
-      // Atualiza o artigo adicionando o anexo
       const updated = await Article.findByIdAndUpdate(
         req.params.id,
         { $push: { attachments: attachment } },
