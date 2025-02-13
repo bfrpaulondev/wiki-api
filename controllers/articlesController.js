@@ -2,13 +2,13 @@
 const Article = require('../models/Article');
 const ArticleHistory = require('../models/ArticleHistory');
 
- /**
-  * @swagger
-  * tags:
-  *   name: Articles
-  *   description: Gerencia os artigos da Wiki
-  */
- 
+/**
+ * @swagger
+ * tags:
+ *   name: Articles
+ *   description: Gerencia os artigos da Wiki
+ */
+
 exports.basePath = '/articles';
 exports.authCrud = true; // Criação, atualização e deleção requerem autenticação
 
@@ -56,6 +56,17 @@ exports.listAll = async (req, res) => {
  *                 type: string
  *               section:
  *                 type: string
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               attachments:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               status:
+ *                 type: string
+ *                 enum: [draft, published]
  *     responses:
  *       201:
  *         description: Artigo criado com sucesso
@@ -69,8 +80,13 @@ exports.create = async (req, res) => {
     const article = new Article({
       title: req.body.title,
       content: req.body.content,
-      section: req.body.section,
+      // Para compatibilidade, aceita 'section' ou 'sectionId'
+      section: req.body.section || req.body.sectionId,
       userId: req.user ? req.user.id : null,
+      // Novos campos adicionados:
+      tags: req.body.tags || [],
+      attachments: req.body.attachments || [],
+      status: req.body.status || 'draft'
     });
     const saved = await article.save();
     res.status(201).json(saved);
@@ -136,6 +152,19 @@ exports.getById = async (req, res) => {
  *                 type: string
  *               content:
  *                 type: string
+ *               section:
+ *                 type: string
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               attachments:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               status:
+ *                 type: string
+ *                 enum: [draft, published]
  *     responses:
  *       200:
  *         description: Artigo atualizado com sucesso
@@ -159,12 +188,16 @@ exports.update = async (req, res) => {
       });
       await history.save();
     }
-
     const updated = await Article.findByIdAndUpdate(
       req.params.id,
       {
         title: req.body.title,
         content: req.body.content,
+        // Atualiza também a seção, as tags, os attachments e o status
+        section: req.body.section || req.body.sectionId,
+        tags: req.body.tags,
+        attachments: req.body.attachments,
+        status: req.body.status,
         updatedAt: new Date(),
       },
       { new: true }
